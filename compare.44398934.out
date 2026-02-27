@@ -1,0 +1,35 @@
+CUDA matrix-matrix multiply (50x50 matrices) with column major
+1. cuBLAS dgemm (optimized library)    Latency: 0.003 ms   GFLOPS:  81.380
+2. cuBLAS dgemv in a loop for GEMM     Latency: 0.155 ms   GFLOPS:  1.617
+3. Naive GEMM (parallelized 3 loops)   Latency: 0.009 ms   GFLOPS:  27.127
+
+Error! Unequal mid-points: DGEMM=0.0000, DGEMV=14.3346, Naive=14.3346
+
+CUDA matrix-matrix multiply (200x200 matrices) with column major
+1. cuBLAS dgemm (optimized library)    Latency: 0.002 ms   GFLOPS:  6410.257
+2. cuBLAS dgemv in a loop for GEMM     Latency: 3.143 ms   GFLOPS:  5.091
+3. Naive GEMM (parallelized 3 loops)   Latency: 0.029 ms   GFLOPS:  558.036
+
+Error! Unequal mid-points: DGEMM=0.0000, DGEMV=48.4148, Naive=48.4148
+
+CUDA matrix-matrix multiply (800x800 matrices) with column major
+1. cuBLAS dgemm (optimized library)    Latency: 0.003 ms   GFLOPS:  405063.303
+2. cuBLAS dgemv in a loop for GEMM     Latency: 12.764 ms   GFLOPS:  80.225
+3. Naive GEMM (parallelized 3 loops)   Latency: 1.091 ms   GFLOPS:  938.967
+
+Error! Unequal mid-points: DGEMM=0.0000, DGEMV=197.6149, Naive=197.6149
+
+CUDA matrix-matrix multiply (1600x1600 matrices) with column major
+1. cuBLAS dgemm (optimized library)    Latency: 0.003 ms   GFLOPS:  3240506.426
+2. cuBLAS dgemv in a loop for GEMM     Latency: 46.588 ms   GFLOPS:  175.840
+3. Naive GEMM (parallelized 3 loops)   Latency: 8.376 ms   GFLOPS:  977.995
+
+Error! Unequal mid-points: DGEMM=0.0000, DGEMV=404.0014, Naive=404.0014
+
+CUDA matrix-matrix multiply (3200x3200 matrices) with column major
+1. cuBLAS dgemm (optimized library)    Latency: 0.003 ms   GFLOPS:  25924051.407
+2. cuBLAS dgemv in a loop for GEMM     Latency: 314.459 ms   GFLOPS:  208.409
+3. Naive GEMM (parallelized 3 loops)   Latency: 58.993 ms   GFLOPS:  1110.918
+
+Error! Unequal mid-points: DGEMM=0.0000, DGEMV=776.7538, Naive=776.7538
+

@@ -1,0 +1,71 @@
+>>>>>>>>>>>>>>>>>>>>>>>>>
+Start running itmv tests.
+>>>>>>>>>>>>>>>>>>>>>>>>>
+
+Test 1:n=4, t=1, 1x2 threads:
+With totally 1*2 threads, matrix size being 4, t being 1
+Time cost in seconds: 0.609179
+Final error (|y-x|): 0.000000.
+# of iterations executed: 1.
+Final y[0]=0.000000. y[n-1]=0.000000
+Test 1:n=4, t=1, 1x2 threads error: One mismatch in iterative mat-vect multiplication
+
+Test 2:n=4, t=2, 1x2 threads:
+With totally 1*2 threads, matrix size being 4, t being 2
+Time cost in seconds: 0.000234
+Final error (|y-x|): 0.000000.
+# of iterations executed: 1.
+Early exit due to convergence, even asked for 2 iterations.
+Final y[0]=0.000000. y[n-1]=0.000000
+Test 2:n=4, t=2, 1x2 threads error: One mismatch in iterative mat-vect multiplication
+
+Test 3:n=8, t=1, 1x2 threads:
+With totally 1*2 threads, matrix size being 8, t being 1
+Time cost in seconds: 0.000213
+Final error (|y-x|): 0.000000.
+# of iterations executed: 1.
+Final y[0]=3249973231616.000000. y[n-1]=0.000000
+Test 3:n=8, t=1, 1x2 threads error: One mismatch in iterative mat-vect multiplication
+
+Test 4:n=8, t=2, 1x2 threads:
+With totally 1*2 threads, matrix size being 8, t being 2
+Time cost in seconds: 0.000208
+Final error (|y-x|): 0.000000.
+# of iterations executed: 1.
+Early exit due to convergence, even asked for 2 iterations.
+Final y[0]=0.000000. y[n-1]=0.000000
+Test 4:n=8, t=2, 1x2 threads error: One mismatch in iterative mat-vect multiplication
+
+Test 8a:n=4, t=1, 1x1 threads/Gauss-Seidel:
+With totally 1*1 threads, matrix size being 4, t being 1
+Time cost in seconds: 0.000224
+Final error (|y-x|): 0.000000.
+# of iterations executed: 5.
+Final y[0]=0.000000. y[n-1]=0.000000
+Test 8a:n=4, t=1, 1x1 threads/Gauss-Seidel error: One mismatch in iterative mat-vect multiplication
+
+Test 8b:n=4, t=2, 1x1 threads/Gauss-Seidel:
+With totally 1*1 threads, matrix size being 4, t being 2
+Time cost in seconds: 0.000223
+Final error (|y-x|): 0.000000.
+# of iterations executed: 5.
+Final y[0]=0.000000. y[n-1]=0.000000
+Test 8b:n=4, t=2, 1x1 threads/Gauss-Seidel error: One mismatch in iterative mat-vect multiplication
+
+Test 8c:n=8, t=1, 1x1 threads/Gauss-Seidel:
+With totally 1*1 threads, matrix size being 8, t being 1
+Time cost in seconds: 0.000210
+Final error (|y-x|): 0.000000.
+# of iterations executed: 5.
+Final y[0]=0.000000. y[n-1]=0.000000
+Test 8c:n=8, t=1, 1x1 threads/Gauss-Seidel error: One mismatch in iterative mat-vect multiplication
+
+Test 8d:n=8, t=2, 1x1 threads/Gauss-Seidel:
+With totally 1*1 threads, matrix size being 8, t being 2
+Time cost in seconds: 0.000215
+Final error (|y-x|): 0.000000.
+# of iterations executed: 5.
+Final y[0]=0.000000. y[n-1]=0.000000
+Test 8d:n=8, t=2, 1x1 threads/Gauss-Seidel error: One mismatch in iterative mat-vect multiplication
+
+Summary: Failed 8 out of 8 tests
