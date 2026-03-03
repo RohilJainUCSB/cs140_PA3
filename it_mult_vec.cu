@@ -26,23 +26,49 @@ void mult_vec_async(int n, int rows_per_thread, int num_async_iter, float *y, fl
 #ifdef DEBUG1
   dprint_sample ( "GS GPU ", A,  x, d, y, n, num_async_iter, !UPPER_TRIANGULAR);
 #endif
-  int idx=0; /*Assign a linearized thread ID, so I can be responsible for some rows*/
-  /*Your solution to compute idx */
 
+  /*
+   * Q2: Compute a unique linearized thread ID across all blocks.
+   * Each thread is responsible for rows [idx*rows_per_thread, (idx+1)*rows_per_thread).
+   * blockIdx.x  = which block this thread is in (0..gridDim.x-1)
+   * blockDim.x  = number of threads per block
+   * threadIdx.x = local thread index within the block (0..blockDim.x-1)
+   */
+  int idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+  /* Initialize y with current x for all owned rows before starting iterations */
   for (int i = 0; i < rows_per_thread; i++) {
     int row_index = idx * rows_per_thread + i;
     y[row_index] = x[row_index]; //Start with current value of x
   }
-  for (int k = 0; k < num_async_iter; k++) {
-    /*Perform asynchronous Gauss-Seidel method for y=d+Ay*/
-    /*Your solution*/
 
+  /*
+   * Q2: Perform asynchronous Gauss-Seidel updates for num_async_iter rounds.
+   * Key property: threads run WITHOUT inter-thread synchronization.
+   * Each thread uses the LATEST available values of y (including updates
+   * made by other threads to y[] since we all read/write the shared y[]).
+   * This is the "asynchronous" part — threads do NOT wait for each other.
+   */
+  for (int k = 0; k < num_async_iter; k++) {
+    /* For each owned row, compute new y[row] = d[row] + A[row,:] * y */
+    for (int i = 0; i < rows_per_thread; i++) {
+      int row_index = idx * rows_per_thread + i;
+      if (row_index < n) {
+        double sum = d[row_index];
+        for (int j = 0; j < n; j++) {
+          /* Use y (not x) — Gauss-Seidel reads the latest updated values */
+          sum += A[row_index * n + j] * y[j];
+        }
+        y[row_index] = (float)sum;
+      }
+    }
 
 #ifdef DEBUG1
     dprint_samplexy ( "GS GPU ", k, x, y, n);
 #endif
   }
- 
+
+  /* Compute element-wise absolute difference between updated y and original x */
   for (int i = 0; i < rows_per_thread; i++) {
     int row_index = idx * rows_per_thread + i;
     diff[row_index] = fabs(x[row_index] - y[row_index]); //Compute the difference
@@ -65,10 +91,27 @@ void mult_vec_async(int n, int rows_per_thread, int num_async_iter, float *y, fl
 __global__
 void mult_vec(int n, int rows_per_thread, float *y, float *d, float *A,
               float *x, float *diff) {
-  int idx=0; /*Assign a linearized thread ID, which will be used to determine what I own*/ 
-  /*Your solution to compute idx */ 
-  
 
+  /*
+   * Q1: Compute a unique linearized thread ID across all blocks.
+   * Total threads = gridDim.x * blockDim.x = num_blocks * threads_per_block.
+   * Thread idx owns rows: [idx*rows_per_thread, (idx+1)*rows_per_thread).
+   *
+   * blockIdx.x  = which block this thread belongs to (0..gridDim.x-1)
+   * blockDim.x  = number of threads per block (threads_per_block)
+   * threadIdx.x = this thread's local index within its block (0..blockDim.x-1)
+   *
+   * Formula: idx = blockIdx.x * blockDim.x + threadIdx.x
+   */
+  int idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+  /*
+   * Q1: Each thread computes rows [idx*rows_per_thread, (idx+1)*rows_per_thread).
+   * For each owned row_index, compute:
+   *   y[row_index] = d[row_index] + sum_j( A[row_index][j] * x[j] )
+   * This is one Jacobi step: y = d + A*x (reads from x, writes to y).
+   * Also compute diff[row_index] = |y[row_index] - x[row_index]| for convergence check.
+   */
   for (int i = 0; i < rows_per_thread; i++) {
     int row_index = idx * rows_per_thread + i;
     double sum = d[row_index];
@@ -114,7 +157,7 @@ int it_mult_vec(int N,
     printf("The number of total threads is larger than the matrix size N.\n");
     return -1;
   }
-  // Check if  N can be   divided by threads_per_block.
+  // Check if N can be divided by threads_per_block.
   if (N % (num_blocks*threads_per_block)) {
     printf("The matrix size N should be divisible by num_blocks*threads_per_block.\n");
     return -1;
@@ -126,9 +169,21 @@ int it_mult_vec(int N,
   int row_size = N * sizeof(float);
   int A_size = N * row_size;
 
-  /*Allocate device global space for matrix A. Copy  data to the device global memory*/
-  /*Your solution*/
-  
+  /*
+   * Q1: Allocate device global memory for matrix A and copy from host.
+   * A is an N×N matrix stored in row-major order, total size = N * N * sizeof(float).
+   */
+  result = cudaMalloc( (void **) &A_d, A_size);
+  if (result) {
+    printf("Error in cudaMalloc for A. Error code is %d.\n", result);
+    return -1;
+  }
+  result = cudaMemcpy(A_d, A, A_size, cudaMemcpyHostToDevice);
+  if (result) {
+    printf("Error in cudaMemcpy for A. Error code is %d.\n", result);
+    return -1;
+  }
+
   /*Allocate, and copy other  data to the device global memory*/
   result = cudaMalloc( (void **) &x_d, row_size);
   if (result) {
@@ -165,20 +220,35 @@ int it_mult_vec(int N,
     printf("Error in cudaMalloc. Error code is %d.\n", result);
     return -1;
   }
+
   /* You can assume N/num_blocks/threads_per_block is an integer*/
   int rows_per_thread = ceil(N * 1.0 / num_blocks / threads_per_block);
   k=0; 
   while (k < iterations) {
     if (use_async) {
+      /*
+       * Q2: Launch the async Gauss-Seidel kernel.
+       * Each kernel call runs NUM_ASYNC_ITER inner iterations without synchronization.
+       * Threads share y[] and read the latest values written by any thread (GS style).
+       */
       mult_vec_async<<<num_blocks, threads_per_block>>>(
           N, rows_per_thread, NUM_ASYNC_ITER, y_d, d_d, A_d, x_d, diff_d);
 
       k += NUM_ASYNC_ITER; //The above line already executes NUM_ASYNC_ITER iterations
-    } else { /* call a kernel Jacobi method to compute y=d+Ax*/
-      /*Your solution*/
-      
-     k++;
+    } else {
+      /*
+       * Q1: Launch the Jacobi kernel for one iteration.
+       * num_blocks blocks, each with threads_per_block threads.
+       * Total threads = num_blocks * threads_per_block.
+       * Each thread handles rows_per_thread rows.
+       * Reads from x_d (old values), writes new values to y_d.
+       */
+      mult_vec<<<num_blocks, threads_per_block>>>(
+          N, rows_per_thread, y_d, d_d, A_d, x_d, diff_d);
+
+      k++;
     }
+
     // Detect convergence. Copy the difference vector from the device
     result = cudaMemcpy(diff, diff_d, row_size, cudaMemcpyDeviceToHost);
     if (result) {
@@ -193,14 +263,22 @@ int it_mult_vec(int N,
       break;
     }
 
-    if (k  < iterations) { //Swap x and y pointers, so next round strts with latest solution
+    if (k  < iterations) { //Swap x and y pointers, so next round starts with latest solution
       float *tmp = x_d;
       x_d = y_d;
       y_d = tmp;
     }
   }
-  /*Copy the final solution vector y from device. */
-  /*Your solution*/
+
+  /*
+   * Q1: Copy the final solution vector y from device back to host.
+   * After the loop, y_d holds the most recent solution.
+   */
+  result = cudaMemcpy(y, y_d, row_size, cudaMemcpyDeviceToHost);
+  if (result) {
+    printf("Error in cudaMemcpy for final y. Error code is %d.\n", result);
+    return -1;
+  }
 
   cudaFree(A_d);
   cudaFree(x_d);
@@ -215,20 +293,6 @@ int it_mult_vec(int N,
  * Function:  it_mult_vec_seq
  * Purpose:   Run iterations of computation: {y=d+Ax; x=y} sequentially.
  *            Break if converge.
- * In args:   A:  matrix A
- *            d:  column vector d
- *            matrix_type:  matrix_type=0 means A is a regular matrix.
- *                          matrix_type=1 (UPPER_TRIANGULAR)
-                            means A is an upper triangular matrix
- *            N:  the global  number of columns (same as the number of rows)
- *            iterations:   the number of iterations
- * In/out:    x:  column vector x
- *            y:  column vector y
- * Return:  1  means succesful
- *          0  means unsuccessful
- * Errors:  If an error is detected
- *          (e.g. n is non-positive, matrix/vector pointers are NULL)
- *
  */
 int it_mult_vec_seq(int N,
                     float *y,
@@ -266,24 +330,11 @@ int it_mult_vec_seq(int N,
   }
   return 1;
 }
+
 /*-------------------------------------------------------------------
  * Function:  gsit_mult_vec_seq
  * Purpose:   Run iterations of Gauss-Seidel method: {y=d+Ay} sequentially.
  *            Break if converge.
- * In args:   A:  matrix A
- *            d:  column vector d
- *            matrix_type:  matrix_type=0 means A is a regular matrix.
- *                          matrix_type=1 (UPPER_TRIANGULAR)
-                            means A is an upper triangular matrix
- *            N:  the global  number of columns (same as the number of rows)
- *            iterations:   the number of iterations
- * In/out:    x:  column vector x  initial solution
- *            y:  column vector y  final solution
- * Return:  1  means succesful
- *          0  means unsuccessful
- * Errors:  If an error is detected
- *          (e.g. n is non-positive, matrix/vector pointers are NULL)
- *
  */
 int gsit_mult_vec_seq(int N,
                     float *y,
@@ -346,8 +397,7 @@ void print_sample ( const char* msgheader, float A[],  float x[], float d[], flo
   printf("%s check A[0][0-3] are %f, %f, %f, %f\n", msgheader, A[0], A[1], A[2], A[3]);
   printf("%s check A[1][0-3] are %f, %f, %f, %f\n", msgheader, A[n], A[n+1], A[n+2], A[n+3]);
   printf("%s check A[2][0-3] are %f, %f, %f, %f\n", msgheader, A[2*n], A[2*n+1], A[2*n+2], A[2*n+3]);
-  printf("%s check A[3][0-3] are %f, %f, %f, %f\n", msgheader,  A[3*n], A[3*n+1], A[3*n+2], A[3*n+3]);
-
+  printf("%s check A[3][0-3] are %f, %f, %f, %f\n", msgheader, A[3*n], A[3*n+1], A[3*n+2], A[3*n+3]);
 }
 
 __device__ void dprint_sample ( const char* msgheader, float A[],  float x[], float d[], float  y[], int n, int t, int matrix_type) {
@@ -361,18 +411,18 @@ __device__ void dprint_sample ( const char* msgheader, float A[],  float x[], fl
   printf("%s check A[1][0-3] are %f, %f, %f, %f\n", msgheader, A[n], A[n+1], A[n+2], A[n+3]);
   printf("%s check A[2][0-3] are %f, %f, %f, %f\n", msgheader, A[2*n], A[2*n+1], A[2*n+2], A[2*n+3]);
   printf("%s check A[3][0-3] are %f, %f, %f, %f\n", msgheader,  A[3*n], A[3*n+1], A[3*n+2], A[3*n+3]);
-
 }
+
 void print_samplexy ( const char* msgheader, int k, float x[], float y[], int n) {
-  if(k>3|| n<4 || x==NULL ||   y==NULL) //No print if k is too big or n is too small 
+  if(k>3|| n<4 || x==NULL ||   y==NULL)
     return;
   printf("%s %d check x[0-3] %f, %f, %f, %f\n",   msgheader, k, x[0], x[1], x[2], x[3]);
   printf("%s %d check y[0-3] %f, %f, %f, %f\n",   msgheader, k,y[0], y[1], y[2], y[3]);
 }
+
 __device__ void dprint_samplexy ( const char* msgheader, int k, float x[], float y[], int n) {
   if(n<4 || x==NULL ||   y==NULL)
     return;
   printf("%s %d check x[0-3] %f, %f, %f, %f\n",  msgheader,k, x[0], x[1], x[2], x[3]);
   printf("%s %d check y[0-3] %f, %f, %f, %f\n",  msgheader,k, y[0], y[1], y[2], y[3]);
 }
-
