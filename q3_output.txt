@@ -1,0 +1,49 @@
+Thu Mar  5 00:21:53 2026       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 525.85.12    Driver Version: 525.85.12    CUDA Version: 12.0     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  Tesla V100-SXM2...  On   | 00000000:3B:00.0 Off |                    0 |
+| N/A   33C    P0    41W / 300W |      0MiB / 32768MiB |      0%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|  No running processes found                                                 |
++-----------------------------------------------------------------------------+
+CUDA matrix-matrix multiply (50x50 matrices) with column major
+1. cuBLAS dgemm (optimized library)    Latency: 0.024 ms   GFLOPS:  10.615
+2. cuBLAS dgemv in a loop for GEMM     Latency: 0.153 ms   GFLOPS:  1.638
+3. Naive GEMM (parallelized 3 loops)   Latency: 0.007 ms   GFLOPS:  34.877
+Mid-point verification looks OK: DGEMM=11.3939, DGEMV=11.3939, Naive=11.3939
+CUDA matrix-matrix multiply (200x200 matrices) with column major
+1. cuBLAS dgemm (optimized library)    Latency: 0.034 ms   GFLOPS:  473.485
+2. cuBLAS dgemv in a loop for GEMM     Latency: 3.277 ms   GFLOPS:  4.883
+3. Naive GEMM (parallelized 3 loops)   Latency: 0.030 ms   GFLOPS:  538.793
+Mid-point verification looks OK: DGEMM=45.9858, DGEMV=45.9858, Naive=45.9858
+CUDA matrix-matrix multiply (800x800 matrices) with column major
+1. cuBLAS dgemm (optimized library)    Latency: 0.232 ms   GFLOPS:  4405.286
+2. cuBLAS dgemv in a loop for GEMM     Latency: 13.172 ms   GFLOPS:  77.742
+3. Naive GEMM (parallelized 3 loops)   Latency: 1.081 ms   GFLOPS:  946.970
+
+Mid-point verification looks OK: DGEMM=192.8219, DGEMV=192.8219, Naive=192.8219
+
+CUDA matrix-matrix multiply (1600x1600 matrices) with column major
+1. cuBLAS dgemm (optimized library)    Latency: 1.300 ms   GFLOPS:  6299.213
+2. cuBLAS dgemv in a loop for GEMM     Latency: 46.304 ms   GFLOPS:  176.917
+3. Naive GEMM (parallelized 3 loops)   Latency: 8.378 ms   GFLOPS:  977.756
+
+Mid-point verification looks OK: DGEMM=401.9456, DGEMV=401.9456, Naive=401.9456
+
+CUDA matrix-matrix multiply (3200x3200 matrices) with column major
+1. cuBLAS dgemm (optimized library)    Latency: 9.322 ms   GFLOPS:  7029.877
+2. cuBLAS dgemv in a loop for GEMM     Latency: 313.820 ms   GFLOPS:  208.833
+3. Naive GEMM (parallelized 3 loops)   Latency: 56.500 ms   GFLOPS:  1159.925
+Mid-point verification looks OK: DGEMM=801.3197, DGEMV=801.3197, Naive=801.3197

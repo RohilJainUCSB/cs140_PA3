@@ -1,0 +1,123 @@
+Compile exit code: 0
+Wed Mar  4 23:58:42 2026       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 525.85.12    Driver Version: 525.85.12    CUDA Version: 12.0     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  Tesla V100-SXM2...  On   | 00000000:3B:00.0 Off |                    0 |
+| N/A   32C    P0    41W / 300W |      0MiB / 32768MiB |      0%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|  No running processes found                                                 |
++-----------------------------------------------------------------------------+
+>>>>>>>>>>>>>>>>>>>>>>>>>
+Start running itmv tests.
+>>>>>>>>>>>>>>>>>>>>>>>>>
+Test 1:n=4, t=1, 1x2 threads:
+With totally 1*2 threads, matrix size being 4, t being 1
+Time cost in seconds: 0.123807
+Final error (|y-x|): 1.750000.
+# of iterations executed: 1.
+Final y[0]=1.750000. y[n-1]=1.750000
+Test 2:n=4, t=2, 1x2 threads:
+With totally 1*2 threads, matrix size being 4, t being 2
+Time cost in seconds: 0.000251
+Final error (|y-x|): 1.312500.
+# of iterations executed: 2.
+Final y[0]=0.437500. y[n-1]=0.437500
+
+Test 3:n=8, t=1, 1x2 threads:
+With totally 1*2 threads, matrix size being 8, t being 1
+Time cost in seconds: 0.000236
+Final error (|y-x|): 1.875000.
+# of iterations executed: 1.
+Final y[0]=1.875000. y[n-1]=1.875000
+
+Test 4:n=8, t=2, 1x2 threads:
+With totally 1*2 threads, matrix size being 8, t being 2
+Time cost in seconds: 0.000238
+Final error (|y-x|): 1.640625.
+# of iterations executed: 2.
+Final y[0]=0.234375. y[n-1]=0.234375
+
+Test 8a:n=4, t=1, 1x1 threads/Gauss-Seidel:
+With totally 1*1 threads, matrix size being 4, t being 1
+Time cost in seconds: 0.000235
+Final error (|y-x|): 1.000193.
+# of iterations executed: 5.
+Final y[0]=1.000089. y[n-1]=1.000193
+
+Test 8b:n=4, t=2, 1x1 threads/Gauss-Seidel:
+With totally 1*1 threads, matrix size being 4, t being 2
+Time cost in seconds: 0.000237
+Final error (|y-x|): 1.000193.
+# of iterations executed: 5.
+Final y[0]=1.000089. y[n-1]=1.000193
+
+Test 8c:n=8, t=1, 1x1 threads/Gauss-Seidel:
+With totally 1*1 threads, matrix size being 8, t being 1
+Time cost in seconds: 0.000229
+Final error (|y-x|): 1.001155.
+# of iterations executed: 5.
+Final y[0]=1.001155. y[n-1]=0.999790
+
+Test 8d:n=8, t=2, 1x1 threads/Gauss-Seidel:
+With totally 1*1 threads, matrix size being 8, t being 2
+Time cost in seconds: 0.000222
+Final error (|y-x|): 1.001155.
+# of iterations executed: 5.
+Final y[0]=1.001155. y[n-1]=0.999790
+
+Test 9: n=4K t=1K 32x128 threads:
+With totally 32*128 threads, matrix size being 4096, t being 1024
+Time cost in seconds: 0.461755
+Final error (|y-x|): 1.500505.
+# of iterations executed: 1024.
+Final y[0]=0.249800. y[n-1]=0.249800
+
+Test 9a: n=4K t=1K 16x128 threads:
+With totally 16*128 threads, matrix size being 4096, t being 1024
+Time cost in seconds: 0.848297
+Final error (|y-x|): 1.500505.
+# of iterations executed: 1024.
+Final y[0]=0.249800. y[n-1]=0.249800
+
+Test 9b: n=4K t=1K 8x128 threads:
+With totally 8*128 threads, matrix size being 4096, t being 1024
+Time cost in seconds: 1.630125
+Final error (|y-x|): 1.500505.
+# of iterations executed: 1024.
+Final y[0]=0.249800. y[n-1]=0.249800
+
+Test 9c: n=4K t=1K 4x128 threads:
+With totally 4*128 threads, matrix size being 4096, t being 1024
+Time cost in seconds: 3.260764
+Final error (|y-x|): 1.500505.
+# of iterations executed: 1024.
+Final y[0]=0.249800. y[n-1]=0.249800
+
+Test 11: n=4K t=1K 32x128 threads/Async:
+With totally 32*128 threads, matrix size being 4096, t being 1024
+Time cost in seconds: 0.474919
+Final error (|y-x|): 0.001747.
+# of iterations executed: 1025.
+Final y[0]=1.000801. y[n-1]=1.000824
+
+Test 11a: n=4K t=1K 8x128 threads/Async:
+With totally 8*128 threads, matrix size being 4096, t being 1024
+Time cost in seconds: 0.040352
+Final error (|y-x|): 0.000000.
+# of iterations executed: 15.
+Early exit due to convergence, even asked for 1024 iterations.
+Asynchronous code actually runs 15 iterations.
+Final y[0]=1.000000. y[n-1]=1.000000
+Summary: Failed 0 out of 14 tests
